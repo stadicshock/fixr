@@ -50,7 +50,7 @@ func (a *Anthropic) Complete(ctx context.Context, text string, images [][]byte, 
 			"type": "image",
 			"source": map[string]interface{}{
 				"type":       "base64",
-				"media_type": "image/png",
+				"media_type": "image/jpeg",
 				"data":       base64.StdEncoding.EncodeToString(img),
 			},
 		})
