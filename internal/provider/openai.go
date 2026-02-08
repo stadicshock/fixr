@@ -49,7 +49,7 @@ func (o *OpenAI) Complete(ctx context.Context, text string, images [][]byte, pre
 		contentParts = append(contentParts, map[string]interface{}{
 			"type": "image_url",
 			"image_url": map[string]interface{}{
-				"url":    "data:image/png;base64," + base64.StdEncoding.EncodeToString(img),
+				"url":    "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(img),
 				"detail": "auto",
 			},
 		})
