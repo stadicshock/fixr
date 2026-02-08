@@ -19,7 +19,7 @@ providers:
   bedrock:
     region: us-east-1
     model_id: us.anthropic.claude-3-5-haiku-20241022-v1:0
-    profile: ""                   # AWS profile name from ~/.aws/config (e.g. "lz-ai-ml-le")
+    profile: ""                   # AWS profile name from ~/.aws/config (e.g. "ML")
     # Uses AWS credentials from ~/.aws/credentials or environment variables
     # No api_key needed — uses standard AWS credential chain
 
