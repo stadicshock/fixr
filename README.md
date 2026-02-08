@@ -56,6 +56,8 @@ To trigger fixr from anywhere with a keyboard shortcut:
 6. Go to **System Settings > Keyboard > Keyboard Shortcuts > Services**
 7. Find "Fix Grammar" and assign **Ctrl+Shift+G** (or your preferred shortcut)
 
+![Screen Recording 2026-02-08 at 8 04 22 PM](https://github.com/user-attachments/assets/b00f1e78-1d4e-49ec-87cd-a122f04891cc)
+
 Now from anywhere: copy text, press the hotkey, paste the corrected version.
 
 ## Configuration
