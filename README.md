@@ -22,7 +22,7 @@ It also keeps things secure. Your text goes directly to the AI provider you conf
 
 ```bash
 # Build from source
-git clone https://github.com/fixr-app/fixr && cd fixr
+git clone https://github.com/stadicshock/fixr && cd fixr
 go build -o fixr .
 
 # Create config
