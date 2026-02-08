@@ -1,15 +1,22 @@
 # fixr
 
-**Private, context-aware grammar assistant.** Fix grammar anywhere you write — Slack, email, docs — using your own AI API keys. No free-tier services, no data collection, no third-party access.
+**Fix grammar anywhere you write — powered by AI models you already pay for.**
+
+You already have access to powerful AI models through paid API keys (Anthropic, OpenAI), your company's cloud accounts (AWS Bedrock), or locally via Ollama. fixr makes it dead simple to use those models for everyday grammar correction — right from your clipboard, in one command.
 
 ## Why fixr?
 
-Free grammar tools (Grammarly, free ChatGPT) send your confidential text to third-party servers. `fixr` uses **your own API keys** so sensitive messages never leave your control.
+AI models like Claude and GPT-4o are excellent at fixing grammar. But using them means opening a browser, pasting into a chat window, waiting, and copying the result back. Every time.
 
-- **Privacy-first**: Text is only sent to the AI provider YOU configure
-- **Context-aware**: Automatically captures a screenshot of your active window so the AI understands the conversation tone and setting
+fixr removes that friction. One command, and your clipboard text is fixed.
+
+It also keeps things secure. Your text goes directly to the AI provider you configure — your own API key, your own AWS account. No middleman, no free-tier services storing your data, no browser extensions reading everything you type.
+
+- **Use AI you already pay for**: Bring your own API keys — Anthropic, OpenAI, AWS Bedrock, or local Ollama
+- **One command**: Copy text, run `fixr fix -c`, paste the corrected version
+- **Context-aware**: Optionally captures a screenshot of your active window so the AI understands conversation tone and setting
 - **Single binary**: One `go build`, one executable. No runtime, no dependencies
-- **Multiple providers**: Anthropic Claude, OpenAI GPT-4o, AWS Bedrock, or local Ollama
+- **Secure by design**: Text goes directly to your configured provider. No data collection, no third-party access
 
 ## Quick Start
 
