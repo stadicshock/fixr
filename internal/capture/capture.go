@@ -9,8 +9,12 @@ import (
 	"strings"
 )
 
+// maxImageSize is the maximum image size in bytes (4MB, under the 5MB API limit).
+const maxImageSize = 4 * 1024 * 1024
+
 // ActiveWindow captures a screenshot of the currently active (frontmost) window
-// on macOS using the native screencapture command. Returns the PNG image bytes.
+// on macOS using the native screencapture command. Returns JPEG image bytes,
+// resized to stay under API size limits.
 func ActiveWindow() ([]byte, error) {
 	// Get the window ID of the frontmost window using AppleScript
 	windowID, err := getFrontmostWindowID()
@@ -19,37 +23,74 @@ func ActiveWindow() ([]byte, error) {
 		return captureScreen()
 	}
 
-	tmpFile := filepath.Join(os.TempDir(), "fixr-capture.png")
+	tmpFile := filepath.Join(os.TempDir(), "fixr-capture.jpg")
 	defer os.Remove(tmpFile)
 
-	// -x: no sound, -l: capture specific window by ID
-	cmd := exec.Command("screencapture", "-x", "-l", strconv.Itoa(windowID), tmpFile)
+	// -x: no sound, -t jpg: JPEG format (much smaller than PNG), -l: specific window
+	cmd := exec.Command("screencapture", "-x", "-t", "jpg", "-l", strconv.Itoa(windowID), tmpFile)
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("capture: screencapture failed: %w", err)
 	}
 
-	data, err := os.ReadFile(tmpFile)
-	if err != nil {
-		return nil, fmt.Errorf("capture: failed to read screenshot: %w", err)
-	}
-
-	return data, nil
+	return readAndResize(tmpFile)
 }
 
 // captureScreen captures the entire main screen as a fallback.
 func captureScreen() ([]byte, error) {
-	tmpFile := filepath.Join(os.TempDir(), "fixr-capture.png")
+	tmpFile := filepath.Join(os.TempDir(), "fixr-capture.jpg")
 	defer os.Remove(tmpFile)
 
-	// -x: no sound, -m: main monitor only
-	cmd := exec.Command("screencapture", "-x", "-m", tmpFile)
+	// -x: no sound, -t jpg: JPEG format, -m: main monitor only
+	cmd := exec.Command("screencapture", "-x", "-t", "jpg", "-m", tmpFile)
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("capture: screencapture failed: %w", err)
 	}
 
-	data, err := os.ReadFile(tmpFile)
+	return readAndResize(tmpFile)
+}
+
+// readAndResize reads the image file and resizes it if it exceeds maxImageSize.
+// Uses macOS native `sips` command — no Go image libraries needed.
+func readAndResize(path string) ([]byte, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("capture: failed to read screenshot: %w", err)
+	}
+
+	// If already under the limit, return as-is
+	if len(data) <= maxImageSize {
+		return data, nil
+	}
+
+	// Resize down using sips (native macOS tool) — halve dimensions until under limit
+	for len(data) > maxImageSize {
+		cmd := exec.Command("sips", "--resampleWidth", "1920", path)
+		cmd.Stdout = nil
+		cmd.Stderr = nil
+		if err := cmd.Run(); err != nil {
+			// If sips fails, return what we have — the provider will handle the error
+			return data, nil
+		}
+
+		data, err = os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("capture: failed to read resized screenshot: %w", err)
+		}
+
+		// If still too large after resizing to 1920px, go smaller
+		if len(data) > maxImageSize {
+			cmd = exec.Command("sips", "--resampleWidth", "1280", path)
+			cmd.Stdout = nil
+			cmd.Stderr = nil
+			if err := cmd.Run(); err != nil {
+				return data, nil
+			}
+			data, err = os.ReadFile(path)
+			if err != nil {
+				return nil, fmt.Errorf("capture: failed to read resized screenshot: %w", err)
+			}
+		}
+		break
 	}
 
 	return data, nil
@@ -71,7 +112,6 @@ func getFrontmostWindowID() (int, error) {
 	cmd := exec.Command("osascript", "-e", script)
 	out, err := cmd.Output()
 	if err != nil {
-		// Fallback: use CGWindowListInfo via python to get frontmost window ID
 		return getFrontmostWindowIDFallback()
 	}
 
@@ -85,7 +125,6 @@ func getFrontmostWindowID() (int, error) {
 
 // getFrontmostWindowIDFallback uses a simpler AppleScript approach.
 func getFrontmostWindowIDFallback() (int, error) {
-	// Get the frontmost app's name and use screencapture with app name approach
 	script := `tell application "System Events" to return name of first application process whose frontmost is true`
 	cmd := exec.Command("osascript", "-e", script)
 	out, err := cmd.Output()
@@ -94,7 +133,7 @@ func getFrontmostWindowIDFallback() (int, error) {
 	}
 
 	appName := strings.TrimSpace(string(out))
-	_ = appName // We'll fall back to full screen capture if we can't get the window ID
+	_ = appName
 
 	return 0, fmt.Errorf("capture: could not determine window ID for %q", appName)
 }
